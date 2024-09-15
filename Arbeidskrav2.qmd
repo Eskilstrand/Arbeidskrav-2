@@ -1,0 +1,131 @@
+---
+title: "Arbeidskrav 2 - Regresjonsmodeller"
+format: html
+bibliography: bib.bib
+author: Eskil Strand
+editor_options: 
+  chunk_output_type: console
+---
+
+
+
+* Part 1 - Lactate thresholds
+
+There are several suggestions on how to best capture the physiological "essence" of the lactate threshold test [See @RN2511, Chapter 6]. A simple, and very common way to analyze the relationship between exercise intensity and blood lactate is to determine exercise intensity at fixed blood lactate values. This can be done by fitting a regression model that captures the relationship and then "inverse predict" the exercise intensity value. Machado [-Machado_2012] provides a more elaborate method for calculating the lactate threshold. An example of such calculation can be found in [the lecture notes, Linear and curve-linear relationships, and predictions](https://dhammarstrom.github.io/quant-methods).
+
+Your report could use data from the reliability project in the lab. Calculate at least two lactate thresholds (e.g. exercise intensity at 2 and 4 mmol L<sup>-1</sup>) and compare the reliability (typical error as a percentage of the mean) between the two thresholds. If you want to complicate things further you may want to implement other lactate threshold concepts [described in @RN2511; @RN228; Machado_2012] and the course notes.
+
+If you lack data, you could use data from the `exscidata` package or from a previous year (see this file [Lactate threshold tests](/data/reliability-old/laktatprofil-g2.xlsx)).
+
+
+```{r}
+#| code-fold: true
+#| message: false
+#| warning: false
+#| label: "Innlastning av nødvendige pakker og datasett"
+
+library(readxl)
+library(ggplot2)
+library(magrittr)
+library(tidyverse)
+library(exscidata)
+library(gt)
+library(ggtext)
+la.profil <- read_xlsx("data/laktatprofil-g2.xlsx")
+
+
+
+```
+
+## Selve arbeidsoppgave: Velg to terskelverdier og sammenlign reliabiliteten mellom dem, som typical error, prosent av gjennomsnitt(?)
+
+```{r}
+#| code-fold: true
+
+
+
+cyclingstudy |> 
+  filter(timepoint == "pre") |> 
+  select(subject, group, lac.125, lac.225, VO2.max) |> 
+  ggplot(aes(lac.125, lac.225)) +
+  geom_point(size = 3, fill = "lightblue", shape = 21) +
+  geom_smooth(method = lm) 
+
+
+
+
+```
+
+
+```{r}
+#| code-fold: true
+#| label: "Velg ut hva vi vil lage en modell av, og lagre den i environment"
+
+
+
+dat <- cyclingstudy |> 
+  filter(timepoint == "pre") |> 
+  select(subject, group, VO2.max, lac.125, lac.225) |> 
+  print()
+
+m1 <- lm(lac.125 ~ lac.225, data = cyclingstudy)
+
+
+
+```
+
+
+```{r}
+#| code-fold: true
+
+
+
+
+new.la125 <- 1.24
+
+
+
+prediction <- coef(m1) [1] + coef(m1) [2] * new.la125
+
+
+
+pred <- predict(m1)
+
+
+
+fit <- fitted(m1)
+
+```
+
+
+```{r}
+#| code-fold: true
+
+
+
+
+data.frame(pred, fit) |> 
+  ggplot(aes(pred, fit)) +
+  geom_point(size = 3, fill = "lightblue", shape = 21) 
+
+
+
+
+```
+
+
+
+# Nye predictions??
+
+```{r}
+#| code-fold: true
+#| label: "Data jeg ønsker predikere"
+
+
+# Prøvde færst å kopiere Daniel, men skjønte ikke. Nå gir jeg opp enn så lenge. 
+# Kom ikke lenger, når jeg skulle prøve å kjøre predictions med nye verdier
+# Fjernet forsæket på koden for å kunne laste opp til git. 
+
+
+```
+
