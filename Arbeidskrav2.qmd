@@ -39,95 +39,56 @@ la.profil <- read_xlsx("data/laktatprofil-g2.xlsx")
 
 ## Selve arbeidsoppgave: Velg to terskelverdier og sammenlign reliabiliteten mellom dem, som typical error, prosent av gjennomsnitt(?)
 
-```{r}
-#| code-fold: true
-
-
-
-cyclingstudy |> 
-  filter(timepoint == "pre") |> 
-  select(subject, group, lac.125, lac.225, VO2.max) |> 
-  ggplot(aes(lac.125, lac.225)) +
-  geom_point(size = 3, fill = "lightblue", shape = 21) +
-  geom_smooth(method = lm) 
-
-
-
-
-```
-
 
 ```{r}
 #| code-fold: true
-#| label: "Velg ut hva vi vil lage en modell av, og lagre den i environment"
-
+#| message: false
+#| warning: false
 
 
 dat <- cyclingstudy |> 
-  filter(timepoint == "pre") |> 
-  select(subject, group, VO2.max, lac.125, lac.225) |> 
-  print()
+    filter(timepoint == "pre") |> 
+  select(subject, timepoint, group, lac.225, VO2.max, HF.max) |> 
+mutate(nittipros_hfmax = HF.max * 0.9)
+dat |> 
+    ggplot(aes(lac.225, nittipros_hfmax)) +
+  geom_point(size = 3, 
+             fill = "lightblue",
+             shape = 21) +
+  labs(x = "Lactate @ 225",
+       y = "90% av VO2maks") +
+  theme_minimal() 
 
-m1 <- lm(lac.125 ~ lac.225, data = cyclingstudy)
+# Lag funksjon lm
+
+lm_dat <- lm(dat$nittipros_hfmax ~ lac.225, data = dat)
+
+
+lm_fit <- data.frame(fitted = lm_dat$fitted.values,
+                     lm_dat$model,
+                     resid = lm_dat$residuals)
+
+lm_fit |> 
+ggplot(aes(lac.225, fitted)) +
+  geom_point(size = 3, fill = "gold", shape = 22) +
+  theme_minimal() +
+    geom_point(aes(lac.225, dat$nittipros_hfmax)) +
+  geom_segment(aes(x = lac.225, xend = lac.225, y = fitted, yend = fitted + resid)) +
+  labs(y = "Fitted values 90% av makshf",
+       x = "Laktat @225W")
+
+
+
 
 
 
 ```
-
 
 ```{r}
-#| code-fold: true
-
-
-
-
-new.la125 <- 1.24
-
-
-
-prediction <- coef(m1) [1] + coef(m1) [2] * new.la125
-
-
-
-pred <- predict(m1)
-
-
-
-fit <- fitted(m1)
-
-```
-
-
-```{r}
-#| code-fold: true
-
-
-
-
-data.frame(pred, fit) |> 
-  ggplot(aes(pred, fit)) +
-  geom_point(size = 3, fill = "lightblue", shape = 21) 
-
 
 
 
 ```
 
 
-
-# Nye predictions??
-
-```{r}
-#| code-fold: true
-#| label: "Data jeg ønsker predikere"
-
-
-
-
-# Prøvde færst å kopiere Daniel, men skjønte ikke. Nå gir jeg opp enn så lenge. 
-# Kom ikke lenger, når jeg skulle prøve å kjøre predictions med nye verdier
-# Fjernet forsæket på koden for å kunne laste opp til git. 
-
-
-```
 
