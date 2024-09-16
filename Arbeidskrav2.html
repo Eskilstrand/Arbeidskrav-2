@@ -123,9 +123,8 @@ div.csl-indent {
 </header>
 
 
-<ul>
-<li>Part 1 - Lactate thresholds</li>
-</ul>
+<section id="part-1---lactate-thresholds" class="level1">
+<h1>Part 1 - Lactate thresholds</h1>
 <p>There are several suggestions on how to best capture the physiological “essence” of the lactate threshold test <span class="citation" data-cites="RN2511">(See <a href="#ref-RN2511" role="doc-biblioref">Tanner and Gore 2012, chap. 6</a>)</span>. A simple, and very common way to analyze the relationship between exercise intensity and blood lactate is to determine exercise intensity at fixed blood lactate values. This can be done by fitting a regression model that captures the relationship and then “inverse predict” the exercise intensity value. Machado [-Machado_2012] provides a more elaborate method for calculating the lactate threshold. An example of such calculation can be found in <a href="https://dhammarstrom.github.io/quant-methods">the lecture notes, Linear and curve-linear relationships, and predictions</a>.</p>
 <p>Your report could use data from the reliability project in the lab. Calculate at least two lactate thresholds (e.g.&nbsp;exercise intensity at 2 and 4 mmol L<sup>-1</sup>) and compare the reliability (typical error as a percentage of the mean) between the two thresholds. If you want to complicate things further you may want to implement other lactate threshold concepts [described in <span class="citation" data-cites="RN2511">Tanner and Gore (<a href="#ref-RN2511" role="doc-biblioref">2012</a>)</span>; <span class="citation" data-cites="RN228">Newell et al. (<a href="#ref-RN228" role="doc-biblioref">2007</a>)</span>; Machado_2012] and the course notes.</p>
 <p>If you lack data, you could use data from the <code>exscidata</code> package or from a previous year (see this file <a href="./data/reliability-old/laktatprofil-g2.xlsx">Lactate threshold tests</a>).</p>
@@ -144,58 +143,119 @@ div.csl-indent {
 </div>
 <section id="selve-arbeidsoppgave-velg-to-terskelverdier-og-sammenlign-reliabiliteten-mellom-dem-som-typical-error-prosent-av-gjennomsnitt" class="level2">
 <h2 class="anchored" data-anchor-id="selve-arbeidsoppgave-velg-to-terskelverdier-og-sammenlign-reliabiliteten-mellom-dem-som-typical-error-prosent-av-gjennomsnitt">Selve arbeidsoppgave: Velg to terskelverdier og sammenlign reliabiliteten mellom dem, som typical error, prosent av gjennomsnitt(?)</h2>
-<div class="cell">
+<div class="cell fig-cap-location-bottom">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>dat <span class="ot">&lt;-</span> cyclingstudy <span class="sc">|&gt;</span> </span>
+<div class="sourceCode cell-code" id="cb2" data-cap-location="bottom"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>dat <span class="ot">&lt;-</span> cyclingstudy <span class="sc">|&gt;</span> </span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(timepoint <span class="sc">==</span> <span class="st">"pre"</span>) <span class="sc">|&gt;</span> </span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(subject, timepoint, group, lac<span class="fl">.225</span>, VO2.max, HF.max) <span class="sc">|&gt;</span> </span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="fu">mutate</span>(<span class="at">nittipros_hfmax =</span> HF.max <span class="sc">*</span> <span class="fl">0.9</span>)</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>dat <span class="sc">|&gt;</span> </span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggplot</span>(<span class="fu">aes</span>(lac<span class="fl">.225</span>, nittipros_hfmax)) <span class="sc">+</span></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">3</span>, </span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>             <span class="at">fill =</span> <span class="st">"lightblue"</span>,</span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>             <span class="at">shape =</span> <span class="dv">21</span>) <span class="sc">+</span></span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Lactate @ 225"</span>,</span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"90% av VO2maks"</span>) <span class="sc">+</span></span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Lag funksjon lm</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>lm_dat <span class="ot">&lt;-</span> <span class="fu">lm</span>(dat<span class="sc">$</span>nittipros_hfmax <span class="sc">~</span> lac<span class="fl">.225</span>, <span class="at">data =</span> dat)</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>lm_fit <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">fitted =</span> lm_dat<span class="sc">$</span>fitted.values,</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>                     lm_dat<span class="sc">$</span>model,</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>                     <span class="at">resid =</span> lm_dat<span class="sc">$</span>residuals)</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>lm_fit <span class="sc">|&gt;</span> </span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="fu">aes</span>(lac<span class="fl">.225</span>, fitted)) <span class="sc">+</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">3</span>, <span class="at">fill =</span> <span class="st">"gold"</span>, <span class="at">shape =</span> <span class="dv">22</span>) <span class="sc">+</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_point</span>(<span class="fu">aes</span>(lac<span class="fl">.225</span>, dat<span class="sc">$</span>nittipros_hfmax)) <span class="sc">+</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_segment</span>(<span class="fu">aes</span>(<span class="at">x =</span> lac<span class="fl">.225</span>, <span class="at">xend =</span> lac<span class="fl">.225</span>, <span class="at">y =</span> fitted, <span class="at">yend =</span> fitted <span class="sc">+</span> resid)) <span class="sc">+</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">y =</span> <span class="st">"Fitted values 90% av makshf"</span>,</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"Laktat @225W"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
-<div>
+<div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="Arbeidskrav2_files/figure-html/unnamed-chunk-2-1.png" class="img-fluid figure-img" width="672"></p>
+<figcaption>Figur 1: Viser laktatverdi på 225W og predikert 90% av VO2maks</figcaption>
 </figure>
 </div>
 </div>
 <details class="code-fold">
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Lag funksjon lm</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>lm_dat <span class="ot">&lt;-</span> <span class="fu">lm</span>(dat<span class="sc">$</span>nittipros_hfmax <span class="sc">~</span> lac<span class="fl">.225</span>, <span class="at">data =</span> dat)</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>lm_fit <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">fitted =</span> lm_dat<span class="sc">$</span>fitted.values,</span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>                     lm_dat<span class="sc">$</span>model,</span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>                     <span class="at">resid =</span> lm_dat<span class="sc">$</span>residuals)</span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>lm_fit <span class="sc">|&gt;</span> </span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="fu">aes</span>(lac<span class="fl">.225</span>, fitted)) <span class="sc">+</span></span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">3</span>, <span class="at">fill =</span> <span class="st">"gold"</span>, <span class="at">shape =</span> <span class="dv">22</span>) <span class="sc">+</span></span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
-<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_point</span>(<span class="fu">aes</span>(lac<span class="fl">.225</span>, dat<span class="sc">$</span>nittipros_hfmax)) <span class="sc">+</span></span>
-<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_segment</span>(<span class="fu">aes</span>(<span class="at">x =</span> lac<span class="fl">.225</span>, <span class="at">xend =</span> lac<span class="fl">.225</span>, <span class="at">y =</span> fitted, <span class="at">yend =</span> fitted <span class="sc">+</span> resid)) <span class="sc">+</span></span>
-<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">y =</span> <span class="st">"Fitted values 90% av makshf"</span>,</span>
-<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"Laktat @225W"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb3" data-cap-location="bottom"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(lm_dat)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Arbeidskrav2_files/figure-html/unnamed-chunk-2-2.png" class="img-fluid figure-img" width="672"></p>
-</figure>
+<div class="cell-output cell-output-stdout">
+<pre data-cap-location="bottom"><code>
+Call:
+lm(formula = dat$nittipros_hfmax ~ lac.225, data = dat)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-11.949  -5.757  -1.398   4.515  15.172 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)  174.144      4.617  37.719   &lt;2e-16 ***
+lac.225       -2.739      1.872  -1.463    0.161    
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 7.132 on 18 degrees of freedom
+Multiple R-squared:  0.1063,    Adjusted R-squared:  0.05664 
+F-statistic: 2.141 on 1 and 18 DF,  p-value: 0.1607</code></pre>
 </div>
 </div>
+</section>
+<section id="reliabilitetsregning" class="level2">
+<h2 class="anchored" data-anchor-id="reliabilitetsregning">Reliabilitetsregning</h2>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>dat_pre <span class="ot">&lt;-</span> cyclingstudy <span class="sc">|&gt;</span> </span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(timepoint, lac<span class="fl">.225</span>, VO2.max) <span class="sc">|&gt;</span> </span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(timepoint <span class="sc">==</span> <span class="st">"pre"</span>)</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>lm_dat_lac2_pre <span class="ot">&lt;-</span> <span class="fu">lm</span>(VO2.max <span class="sc">~</span> lac<span class="fl">.225</span>, <span class="at">data =</span> dat_pre) </span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>lm_val_lac2_pre <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(lm_dat_lac2_pre<span class="sc">$</span>model,</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>                     <span class="at">fitted =</span> lm_dat_lac2_pre<span class="sc">$</span>fitted.values,</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>                     <span class="at">resid =</span> lm_dat_lac2_pre<span class="sc">$</span>residuals)</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>exp_vo2_lac2_pre <span class="ot">&lt;-</span> <span class="fu">coef</span>(lm_dat_lac2_pre) [<span class="dv">1</span>] <span class="sc">+</span> <span class="fu">coef</span>(lm_dat_lac2_pre) [<span class="dv">2</span>] <span class="sc">*</span> <span class="dv">2</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>exp_vo2_lac4_pre <span class="ot">&lt;-</span> <span class="fu">coef</span>(lm_dat_lac2_pre) [<span class="dv">1</span>] <span class="sc">+</span> <span class="fu">coef</span>(lm_dat_lac2_pre) [<span class="dv">2</span>] <span class="sc">*</span> <span class="dv">4</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>exp_vo2_lac2_pre</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>exp_vo2_lac4_pre</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>dat_m3 <span class="ot">&lt;-</span> cyclingstudy <span class="sc">|&gt;</span> </span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(timepoint, lac<span class="fl">.225</span>, VO2.max) <span class="sc">|&gt;</span> </span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(timepoint <span class="sc">==</span> <span class="st">"meso3"</span>)</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>lm_dat_lac2_meso3 <span class="ot">&lt;-</span> <span class="fu">lm</span>(VO2.max <span class="sc">~</span> lac<span class="fl">.225</span>, <span class="at">data =</span> dat_m3) </span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>lm_val_lac2_meso3 <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(lm_dat_lac2_meso3<span class="sc">$</span>model,</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>                     <span class="at">fitted =</span> lm_dat_lac2_meso3<span class="sc">$</span>fitted.values,</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>                     <span class="at">resid =</span> lm_dat_lac2_meso3<span class="sc">$</span>residuals)</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>exp_vo2_lac2_meso3 <span class="ot">&lt;-</span> <span class="fu">coef</span>(lm_dat_lac2_meso3) [<span class="dv">1</span>] <span class="sc">+</span> <span class="fu">coef</span>(lm_dat_lac2_meso3) [<span class="dv">2</span>] <span class="sc">*</span> <span class="dv">2</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>exp_vo2_lac4_meso3 <span class="ot">&lt;-</span> <span class="fu">coef</span>(lm_dat_lac2_meso3) [<span class="dv">1</span>] <span class="sc">+</span> <span class="fu">coef</span>(lm_dat_lac2_meso3) [<span class="dv">2</span>] <span class="sc">*</span> <span class="dv">4</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>exp_vo2_lac2_meso3</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>exp_vo2_lac4_meso3</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>exp_df <span class="ot">&lt;-</span> <span class="fu">tibble</span>(exp_vo2_lac4_pre, exp_vo2_lac4_meso3, exp_vo2_lac2_pre, exp_vo2_lac2_meso3) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 
+</section>
 </section>
 
 <div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" role="doc-bibliography" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list">

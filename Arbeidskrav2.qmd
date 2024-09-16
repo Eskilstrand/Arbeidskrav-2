@@ -9,7 +9,7 @@ editor_options:
 
 
 
-* Part 1 - Lactate thresholds
+# Part 1 - Lactate thresholds
 
 There are several suggestions on how to best capture the physiological "essence" of the lactate threshold test [See @RN2511, Chapter 6]. A simple, and very common way to analyze the relationship between exercise intensity and blood lactate is to determine exercise intensity at fixed blood lactate values. This can be done by fitting a regression model that captures the relationship and then "inverse predict" the exercise intensity value. Machado [-Machado_2012] provides a more elaborate method for calculating the lactate threshold. An example of such calculation can be found in [the lecture notes, Linear and curve-linear relationships, and predictions](https://dhammarstrom.github.io/quant-methods).
 
@@ -44,20 +44,14 @@ la.profil <- read_xlsx("data/laktatprofil-g2.xlsx")
 #| code-fold: true
 #| message: false
 #| warning: false
+#| fig-cap: "Figur 1: Viser laktatverdi på 225W og predikert 90% av VO2maks"
+#| fig-cap-location: bottom
 
 
 dat <- cyclingstudy |> 
     filter(timepoint == "pre") |> 
   select(subject, timepoint, group, lac.225, VO2.max, HF.max) |> 
 mutate(nittipros_hfmax = HF.max * 0.9)
-dat |> 
-    ggplot(aes(lac.225, nittipros_hfmax)) +
-  geom_point(size = 3, 
-             fill = "lightblue",
-             shape = 21) +
-  labs(x = "Lactate @ 225",
-       y = "90% av VO2maks") +
-  theme_minimal() 
 
 # Lag funksjon lm
 
@@ -77,18 +71,82 @@ ggplot(aes(lac.225, fitted)) +
   labs(y = "Fitted values 90% av makshf",
        x = "Laktat @225W")
 
+summary(lm_dat)
 
 
 
 
+
+
+```
+
+
+## Reliabilitetsregning 
+
+
+```{r}
+#| code-fold: true
+#| label: "lac2 @2&4 pre"
+#| output: FALSE
+
+
+dat_pre <- cyclingstudy |> 
+  select(timepoint, lac.225, VO2.max) |> 
+  filter(timepoint == "pre")
+
+lm_dat_lac2_pre <- lm(VO2.max ~ lac.225, data = dat_pre) 
+
+
+lm_val_lac2_pre <- data.frame(lm_dat_lac2_pre$model,
+                     fitted = lm_dat_lac2_pre$fitted.values,
+                     resid = lm_dat_lac2_pre$residuals)
+
+exp_vo2_lac2_pre <- coef(lm_dat_lac2_pre) [1] + coef(lm_dat_lac2_pre) [2] * 2
+
+exp_vo2_lac4_pre <- coef(lm_dat_lac2_pre) [1] + coef(lm_dat_lac2_pre) [2] * 4
+
+exp_vo2_lac2_pre
+
+exp_vo2_lac4_pre
 
 ```
 
 ```{r}
+#| code-fold: true
+#| output: FALSE
+#| label: "lac @2&4 meso3"
+
+dat_m3 <- cyclingstudy |> 
+  select(timepoint, lac.225, VO2.max) |> 
+  filter(timepoint == "meso3")
+
+lm_dat_lac2_meso3 <- lm(VO2.max ~ lac.225, data = dat_m3) 
+
+
+lm_val_lac2_meso3 <- data.frame(lm_dat_lac2_meso3$model,
+                     fitted = lm_dat_lac2_meso3$fitted.values,
+                     resid = lm_dat_lac2_meso3$residuals)
+
+exp_vo2_lac2_meso3 <- coef(lm_dat_lac2_meso3) [1] + coef(lm_dat_lac2_meso3) [2] * 2
+
+exp_vo2_lac4_meso3 <- coef(lm_dat_lac2_meso3) [1] + coef(lm_dat_lac2_meso3) [2] * 4
+
+exp_vo2_lac2_meso3
+
+exp_vo2_lac4_meso3
 
 
 
 ```
+
+
+```{r}
+
+exp_df <- tibble(exp_vo2_lac4_pre, exp_vo2_lac4_meso3, exp_vo2_lac2_pre, exp_vo2_lac2_meso3) 
+
+```
+
+
 
 
 
