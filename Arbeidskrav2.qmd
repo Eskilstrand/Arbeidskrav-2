@@ -122,6 +122,8 @@ data.frame(pred, fit) |>
 #| label: "Data jeg ønsker predikere"
 
 
+
+
 # Prøvde færst å kopiere Daniel, men skjønte ikke. Nå gir jeg opp enn så lenge. 
 # Kom ikke lenger, når jeg skulle prøve å kjøre predictions med nye verdier
 # Fjernet forsæket på koden for å kunne laste opp til git. 

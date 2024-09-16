@@ -1,0 +1,244 @@
+---
+format: html
+author: Eskil
+editor_options: 
+  chunk_output_type: console
+  navbar: left
+---
+
+
+# Regresjon
+
+Når vi møtes på Tirsdag vil jeg spørre dere om hva som er mest forvirrende så langt i emnet. Vi legger noe tid på å diskutere svarene på dette spørsmålet. For å få mest mulig ut av denne diskusjonen ønsker jeg at dere forbereder svaret på dette spørsmålet ved å
+
+- Identifiser hva du syns er ekstra forvirrende
+- Lag et eksempel på hvordan situasjonen oppstår eller hvor du møter problemer
+- Lag en liste på hva du har prøvd for å løse problemet
+- Formuler en setning som beskriver hva du tror er problemet og hvordan man kanskje kan løse det.
+
+
+## Fitting regression models in R
+
+
+```{r}
+#| code-fold: true
+#| message: false
+#| warning: false
+
+
+
+library(readxl)
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(magrittr)
+library(gt)
+library(cowplot)
+library(ggtext)
+dataframe <- read_xlsx("data/o2-test.xlsx")
+
+
+
+```
+
+
+```{r}
+#| code-fold: true
+#| message: false
+
+#Lag en dataframe med følgende verdier
+df <- data.frame(x = c(5.461851, 6.110910, 6.952707, 5.321775, 5.951849),
+                 y = c(9.168992,  8.273749,  5.926797, 10.745583,  7.999151))
+
+#Lineær modell (kommer vel forklaring på tirsdag)
+
+fit <- lm(y ~ x, data = df)
+
+#Summer listen "fit"
+
+summary(fit)
+
+#Test for korrelasjon i valgt dataframe
+
+cor.test(df$x, df$y)
+
+
+```
+
+
+## Finnes det korrelasjon mellom VO2maks og andre verdier i datasettet vårt?
+
+```{r}
+#| code-fold: true
+#| message: false
+#| warning: false
+
+figa <- dataframe |> 
+  filter(timepoint == "t1") |> 
+  select(id, vo2.max, w.max, weight, la.max, borg.max) |> 
+  mutate(rel.vo2max = vo2.max / weight) |> 
+  mutate(rel.wmax = w.max / weight) |> 
+  ggplot(aes(rel.wmax, rel.vo2max)) + 
+  geom_point(size = 3,
+             fill = "orange",
+             shape = 21) +
+              labs(x = "Watt max (per kg)", 
+              y = expression("VO"["2max"]~(ml^-1~kg^-1~min^-1))) +
+  geom_smooth(method = "lm") +
+   theme_minimal()
+
+
+figb <- dataframe |> 
+  filter(timepoint == "t2") |> 
+  select(id, vo2.max, w.max, weight, la.max, borg.max) |> 
+  ggplot(aes(w.max, vo2.max)) +
+  geom_point(size = 2,
+             fill = "red",
+             shape = 22) +
+  labs(x = "Wattmax",
+       y = expression("VO"["2max"]~(ml^-1~min^-1))) +
+  geom_smooth(method = "lm") +
+  theme_minimal()
+  
+  
+plot_grid(figa, figb, ncol = 2, labs = c("A", "B"))
+
+
+
+```
+
+## Sjekk av antakelser
+
+```{r}
+#| code-fold: true
+
+set.seed(1)
+ggplot(data.frame(y = rnorm(100, 0, 1)), aes(sample = y)) +
+  stat_qq(size = 3, fill = "lightgreen", shape = 21) +
+  stat_qq_line() + 
+  labs(x = "Teoretiske kvantiler",
+       y = "Sample quantiles") +
+  theme_minimal()
+
+
+
+```
+
+### Med egne data
+
+```{r}
+#| code-fold: true
+
+
+
+df_select <- dataframe |> 
+  filter(timepoint == "t1") |> 
+  select(id, vo2.max, w.max, weight) |> 
+  mutate(rel.vo2max = vo2.max / weight) |> 
+  mutate(rel.wmax = w.max / weight)
+
+m1 <- lm(rel.vo2max ~ rel.wmax, data = df_select)
+
+dataframe |> 
+  filter(timepoint == "t1") |> 
+  select(id, vo2.max, w.max, weight) |> 
+  mutate(rel.vo2max = vo2.max / weight) |> 
+  mutate(rel.wmax = w.max / weight) |> 
+  mutate(resid = resid(m1), 
+         st.resid = resid/sd(resid)) |> 
+  ggplot(aes(sample = st.resid)) +
+  stat_qq(size = 3,
+          fill = "lightgreen",
+          shape = 21) +
+  stat_qq_line() +
+  theme_minimal()
+  
+
+
+
+```
+
+Figuren ser bra ut, de fleste observasjonene følger normalfordelingen. 
+
+
+## Konstant varians
+
+```{r}
+#| code-fold: true
+#| fig-cap: "Residuals plotted against the fitted values from our model of relative VO2max against wattmax per kg"
+data.frame(resid = resid(m1),
+           fitted = fitted(m1)) |> 
+  ggplot(aes(fitted, resid)) +
+  
+  labs(x = "Fitted values",
+       y = "Raw residuals") +
+  
+  geom_hline(yintercept = 0) +
+  geom_point(size = 3, fill = "darkgreen", shape = 21) +
+  theme_minimal()
+  
+
+
+
+
+```
+
+## Standardiserte residuals
+
+```{r}
+#| code-fold: true
+#| fig-cap: "Standardized residuals plotted against the fitted values from our model of relative VO2max against wattmax per kg"
+
+
+data.frame(resid = resid(m1),
+           fitted = fitted(m1)) |> 
+  mutate(st.resid = resid / sd(resid)) |> 
+  ggplot(aes(fitted, st.resid)) +
+  
+  labs(x = "fitted values",
+       y = "Standardized residuals") +
+  
+  geom_hline(yintercept = 0) +
+  geom_point(size = 3, fill = "lightblue", shape = 21) +
+  theme_minimal()
+
+
+
+```
+
+Når vi ser på figuren ser vi at observasjonen med størst error er 2 standardavvik fra den predikerte verdien. 
+
+
+
+```{r}
+#| echo: false
+
+summary(m1)
+
+```
+
+
+```{r}
+#| code-fold: true
+
+dataframe |> 
+  filter(timepoint == "t1") |> 
+  mutate(rel.vo2max = vo2.max / weight) |> 
+  mutate(rel.wmax = w.max / weight) |> 
+  select(id, rel.vo2max, rel.wmax) |> 
+  mutate(st.resid = resid(m1)/sd(resid(m1)),
+         fitted = fitted(m1)) |> 
+           ggplot(aes(fitted, st.resid, label = id)) +
+           geom_hline(yintercept = 0) +
+           geom_point(size = 3, fill = "lightblue", shape = 21) +
+           geom_label(nudge_x = 1, nudge_y = 0) +
+           
+           labs(x = "Fitted values",
+                y = "Standard residuals") +
+           theme_minimal()
+    
+
+
+
+```
+
